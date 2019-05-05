@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=Zyrk Core
+Comment=Connect to the Zyrk P2P Network
+Comment[de]=Verbinde mit dem Zyrk peer-to-peer Netzwerk
+Comment[fr]=Zyrk, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Zyrk, eşten eşe kriptografik sanal para birimi
+Exec=zyrk-qt %u
+Terminal=false
+Type=Application
+Icon=zyrk128
+MimeType=x-scheme-handler/zyrk;
+Categories=Office;Finance;
+StartupWMClass=Zyrk-qt

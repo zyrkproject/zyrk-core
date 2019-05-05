@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+#  zyrkd The zyrk core server.
+#
+#
+# chkconfig: 345 80 20
+# description: zyrkd
+# processname: zyrkd
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+# you can override defaults in /etc/sysconfig/zyrkd, see below
+if [ -f /etc/sysconfig/zyrkd ]; then
+        . /etc/sysconfig/zyrkd
+fi
+
+RETVAL=0
+
+prog=zyrkd
+# you can override the lockfile via ZYRKD_LOCKFILE in /etc/sysconfig/zyrkd
+lockfile=${ZYRKD_LOCKFILE-/var/lock/subsys/zyrkd}
+
+# zyrkd defaults to /usr/bin/zyrkd, override with ZYRKD_BIN
+zyrkd=${ZYRKD_BIN-/usr/bin/zyrkd}
+
+# zyrkd opts default to -disablewallet, override with ZYRKD_OPTS
+zyrkd_opts=${ZYRKD_OPTS--disablewallet}
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon $DAEMONOPTS $zyrkd $zyrkd_opts
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $prog
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: service $prog {start|stop|status|restart}"
+        exit 1
+        ;;
+esac

@@ -1,0 +1,6 @@
+usr/local/bin/zyrk-qt usr/bin
+share/pixmaps/zyrk32.xpm usr/share/pixmaps
+share/pixmaps/zyrk16.xpm usr/share/pixmaps
+share/pixmaps/zyrk128.png usr/share/pixmaps
+debian/zyrk-qt.desktop usr/share/applications
+debian/zyrk-qt.protocol usr/share/kde4/services/

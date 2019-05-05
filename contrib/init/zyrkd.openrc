@@ -1,0 +1,92 @@
+#!/sbin/openrc-run
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/zyrk/.zyrk" ]; then
+	ZYRKD_DEFAULT_DATADIR="/var/lib/zyrk/.zyrk"
+else
+	ZYRKD_DEFAULT_DATADIR="/var/lib/zyrkd"
+fi
+
+ZYRKD_CONFIGFILE=${ZYRKD_CONFIGFILE:-/etc/zyrk/zyrk.conf}
+ZYRKD_PIDDIR=${ZYRKD_PIDDIR:-/var/run/zyrkd}
+ZYRKD_PIDFILE=${ZYRKD_PIDFILE:-${ZYRKD_PIDDIR}/zyrkd.pid}
+ZYRKD_DATADIR=${ZYRKD_DATADIR:-${ZYRKD_DEFAULT_DATADIR}}
+ZYRKD_USER=${ZYRKD_USER:-${ZYRK_USER:-zyrk}}
+ZYRKD_GROUP=${ZYRKD_GROUP:-zyrk}
+ZYRKD_BIN=${ZYRKD_BIN:-/usr/bin/zyrkd}
+ZYRKD_NICE=${ZYRKD_NICE:-${NICELEVEL:-0}}
+ZYRKD_OPTS="${ZYRKD_OPTS:-${ZYRK_OPTS}}"
+
+name="Zyrk Core Daemon"
+description="ZYRK cryptocurrency P2P network daemon"
+
+command="/usr/bin/zyrkd"
+command_args="-pid=\"${ZYRKD_PIDFILE}\" \
+		-conf=\"${ZYRKD_CONFIGFILE}\" \
+		-datadir=\"${ZYRKD_DATADIR}\" \
+		-daemon \
+		${ZYRKD_OPTS}"
+
+required_files="${ZYRKD_CONFIGFILE}"
+start_stop_daemon_args="-u ${ZYRKD_USER} \
+			-N ${ZYRKD_NICE} -w 2000"
+pidfile="${ZYRKD_PIDFILE}"
+
+# The retry schedule to use when stopping the daemon. Could be either
+# a timeout in seconds or multiple signal/timeout pairs (like
+# "SIGKILL/180 SIGTERM/300")
+retry="${ZYRKD_SIGTERM_TIMEOUT}"
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${ZYRKD_USER}:${ZYRKD_GROUP}" \
+	"${ZYRKD_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${ZYRKD_USER}:${ZYRKD_GROUP}" \
+	"${ZYRKD_PIDDIR}"
+
+	checkpath -f \
+	-o ${ZYRKD_USER}:${ZYRKD_GROUP} \
+	-m 0660 \
+	${ZYRKD_CONFIGFILE}
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if ! grep -qs '^rpcpassword=' "${ZYRKD_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run zyrkd."
+		eerror "The setting must appear in ${ZYRKD_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following "
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"ZYRK Alert\"" \
+			"admin@foo.com"
+		eerror ""
+		return 1
+	fi
+}
