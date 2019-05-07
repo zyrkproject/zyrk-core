@@ -143,7 +143,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     if (nHeight >= chainparams.GetConsensus().nMasternodePaymentsStartBlock) {
         CAmount masternodePayment = GetMasternodePayment(nHeight, blockReward);
-        coinbaseTx.vout[0].nValue -= masternodePayment;
         FillBlockPayments(coinbaseTx, nHeight, masternodePayment, pblock->txoutMasternode, pblock->voutSuperblock);
     }
 

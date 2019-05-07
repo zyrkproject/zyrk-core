@@ -45,7 +45,7 @@ const std::string CLIENT_NAME("Zyrk Core");
 #define GIT_ARCHIVE 1
 #ifdef GIT_ARCHIVE
 #define GIT_COMMIT_ID "845838c4451e"
-#define GIT_COMMIT_DATE "Wed, 14 Mar 2018 16:16:59 +0100"
+#define GIT_COMMIT_DATE "Tues, 7 May 2019 16:16:59 +0100"
 #endif
 
 #define BUILD_DESC_WITH_SUFFIX(maj, min, rev, build, suffix) \
