@@ -107,8 +107,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1557057600; 
 
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000700016");
-        consensus.defaultAssumeValid = uint256S("0x00000ee2c8046cf7d8e37afe036d3fb1c5e0bc27682f8b6020160c200796ed0c");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000082022924bba4e9");
+        consensus.defaultAssumeValid = uint256S("0x00000000001bff2ac23b48189a8cbae78463562a0696a390c012233f8ff2ab63");
 
         consensus.nCoinMaturityReductionHeight = 9999999;
         consensus.nStartAnonymizeFeeDistribution = 1500000;
@@ -159,6 +159,9 @@ public:
 
         vSeeds.emplace_back("peers.zyrk.io");
         vSeeds.emplace_back("seed.zyrk.io");
+        vSeeds.emplace_back("eu.zyrk.io");
+        vSeeds.emplace_back("ru.zyrk.io");
+        vSeeds.emplace_back("oce.zyrk.io");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,75);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,80);
@@ -195,13 +198,14 @@ public:
         checkpointData = {
             {
                 { 0, uint256S("0x00000d8a24f1303b9d29566987e31c6ec289caa102657dda3a0ce6c4e4993035")},
+                { 7225, uint256S("0x00000000001bff2ac23b48189a8cbae78463562a0696a390c012233f8ff2ab63")},
             }
         };
 
         chainTxData = ChainTxData{
-            1556927200,
-            0,
-            2000 
+            1557915435,
+            8793,
+            1 
         };
     }
 };
@@ -289,6 +293,7 @@ public:
         vSeeds.clear();
 
         vSeeds.emplace_back("testnet.zyrk.io");
+        vSeeds.emplace_back("testnet-zyop.zyrk.io");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,1);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,3);
