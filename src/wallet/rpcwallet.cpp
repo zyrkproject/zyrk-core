@@ -5002,10 +5002,6 @@ UniValue getpubcoinpack(const JSONRPCRequest& request) {
 
     CWallet * const pwalletMain = GetWalletForJSONRPCRequest(request);
 
-    if (pwalletMain->IsLocked()) {
-        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
-    }
-
     list <CZerocoinEntry> listUnloadedPubcoin;
     CWalletDB walletdb(pwalletMain->GetDBHandle());
     walletdb.ListUnloadedPubCoin(listUnloadedPubcoin);
@@ -5398,8 +5394,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        {"txid"} },
     { "wallet",             "rescanblockchain",         &rescanblockchain,         {"start_height", "stop_height"} },
     { "wallet",             "getfeeforamount",          &getfeeforamount,          {"amount", "address"} },
-    { "wallet",             "getalladdresses",          &getalladdresses,               {} },
-    { "wallet",             "manageaddressbook",        &manageaddressbook,             {"action","address","label","purpose"} },
+    { "wallet",             "getalladdresses",          &getalladdresses,          {} },
+    { "wallet",             "manageaddressbook",        &manageaddressbook,        {"action","address","label","purpose"} },
 
     { "generating",         "generate",                 &generate,                 {"nblocks","maxtries"} },
 
