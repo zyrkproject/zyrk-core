@@ -199,13 +199,14 @@ public:
             {
                 { 0, uint256S("0x00000d8a24f1303b9d29566987e31c6ec289caa102657dda3a0ce6c4e4993035")},
                 { 7225, uint256S("0x00000000001bff2ac23b48189a8cbae78463562a0696a390c012233f8ff2ab63")},
+                { 13250, uint256S("0x000000000036708ff901cbcdb4c16b37ddb219acbbb50f63841f4ea573c45dcd")},
             }
         };
 
         chainTxData = ChainTxData{
-            1557915435,
-            8793,
-            1 
+            1558683596,
+            15955,
+            0.1 
         };
     }
 };
