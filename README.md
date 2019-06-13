@@ -53,3 +53,11 @@ not straightforward.
  Please fill out the issue template below and submit an issue on the zyrk-core github page.
  
  [ISSUE_TEMPLATE](doc/template/ISSUE_TEMPLATE_example.md)
+
+ ### References/Copyrights
+
+* Copyright (c) 2019 [Bitcoin Core](https://github.com/bitcoin)
+* Copyright (c) 2019 [Dash Core](https://github.com/dashpay)
+* Copyright (c) 2019 [Verge Currency](https://github.com/vergecurrency)
+* Copyright (c) 2019 [NIX Platform](https://github.com/nixplatform/)
+* Copyright (c) 2019 [Particl Project](https://github.com/particl)
