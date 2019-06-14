@@ -1465,10 +1465,6 @@ public:
     std::string AnonymizeModeSpendTrigger(string denomination, string toKey = "", vector<CScript> pubCoinScripts = vector<CScript>());
     bool SpendAllZerocoins();
 
-    /* POS functionality */
-
-    bool ProcessStakingSettings(std::string &sError);
-
     bool InMempool(const uint256 &hash) const;
 
     CAmount GetStaked();
