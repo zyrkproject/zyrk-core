@@ -343,7 +343,6 @@ libzyrk_wallet_a_SOURCES = \
   masternode/masternodeconfig.cpp \
   masternode/instantx.cpp \
   anonymize-address/commitmentkey.cpp \
-  pos/miner.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/feebumper.cpp \
