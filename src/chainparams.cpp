@@ -62,23 +62,6 @@ CAmount CChainParams::SubsidyValue(DynamicRewardSystem::key_type level, uint32_t
     return point->second;
 }
 
-int64_t CChainParams::GetCoinYearReward(int64_t nTime) const
-{
-    if (strNetworkID == "main")
-    {
-        return 0 * CENT;
-    }
-    return nCoinYearReward;
-}
-
-int64_t CChainParams::GetProofOfStakeReward(const CBlockIndex *pindexPrev, int64_t nFees, bool allowInitial) const
-{
-    int64_t nSubsidy;
-    nSubsidy = (pindexPrev->nMoneySupply / COIN) * (0 * CENT) / (365 * 24 * (60 * 60 / nTargetSpacing));
-    return nSubsidy + nFees;
-}
-
-
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
