@@ -3207,8 +3207,6 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize)));
     }
 
-    obj.push_back(Pair("reserve",   ValueFromAmount(pwallet->nReserveBalance)));
-
     obj.push_back(Pair("encryptionstatus", !pwallet->IsCrypted()
     ? "Unencrypted" : pwallet->IsLocked() ? "Locked" : pwallet->fUnlockForStakingOnly ? "Unlocked, staking only" : "Unlocked"));
 
@@ -4709,9 +4707,6 @@ UniValue getstakinginfo(const JSONRPCRequest &request)
     obj.pushKV("percentyearreward", rCoinYearReward);
     obj.pushKV("moneysupply", ValueFromAmount(nMoneySupply));
 
-    if (pwallet->nReserveBalance > 0)
-        obj.pushKV("reserve", ValueFromAmount(pwallet->nReserveBalance));
-
     if (pwallet->nWalletDonationPercent > 0)
         obj.pushKV("walletdonationpercent", pwallet->nWalletDonationPercent);
     if (pwallet->nWalletDonationAddress != "")
@@ -4859,51 +4854,7 @@ UniValue getcoldstakinginfo(const JSONRPCRequest &request)
     return obj;
 }
 
-UniValue reservebalance(const JSONRPCRequest &request)
-{
-    // Reserve balance from being staked for network protection
 
-    CWallet *pwallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
-
-    if (request.fHelp || request.params.size() > 2)
-        throw std::runtime_error(
-            "reservebalance reserve ( amount )\n"
-            "reserve is true or false to turn balance reserve on or off.\n"
-            "amount is a real and rounded to cent.\n"
-            "Set reserve amount not participating in network protection.\n"
-            "If no parameters provided current setting is printed.\n"
-            "Wallet must be unlocked to modify.\n");
-
-    if (request.params.size() > 0)
-    {
-        EnsureWalletIsUnlocked(pwallet);
-
-        bool fReserve = request.params[0].get_bool();
-        if (fReserve)
-        {
-            if (request.params.size() == 1)
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "must provide amount to reserve balance.");
-            int64_t nAmount = AmountFromValue(request.params[1]);
-            nAmount = (nAmount / CENT) * CENT;  // round to cent
-            if (nAmount < 0)
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "amount cannot be negative.");
-            pwallet->SetReserveBalance(nAmount);
-        } else
-        {
-            if (request.params.size() > 1)
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "cannot specify amount to turn off reserve.");
-            pwallet->SetReserveBalance(0);
-        };
-        WakeThreadStakeMiner(pwallet);
-    };
-
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("reserve", (pwallet->nReserveBalance > 0));
-    result.pushKV("amount", ValueFromAmount(pwallet->nReserveBalance));
-    return result;
-}
 
 UniValue refillanonymizekeys(const JSONRPCRequest& request)
 {

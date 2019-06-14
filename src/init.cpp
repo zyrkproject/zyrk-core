@@ -329,9 +329,6 @@ void Shutdown()
     StopRPC();
     StopHTTPServer();
 #ifdef ENABLE_WALLET
-    if(!fMasterNode){
-        ShutdownThreadStakeMiner();
-    }
     FlushWallets();
 #endif
     MapPort(false);
