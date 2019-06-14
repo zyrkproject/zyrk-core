@@ -80,10 +80,7 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue) {
 
     const Consensus::Params &consensusParams = Params().GetConsensus();
     CAmount ret = blockValue / 100 * 35;
-
-    if(nHeight >= consensusParams.nPosHeightActivate)
-        ret = blockValue / 100 * 35;
-        
+       
     return ret;
 }
 
@@ -3701,15 +3698,8 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
     }
 
     // Check proof of work matches claimed amount
-    if(nHeight < consensusParams.nPosHeightActivate){
-        if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-            return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
-    }
-    else{
-        // Check timestamp
-        if (!block.hashPrevBlock.IsNull() && block.GetBlockTime() > (GetAdjustedTime() + 15))
-            return state.DoS(50, false, REJECT_INVALID, "block-timestamp", false, "block timestamp too far in the future");
-    }
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;
 }
@@ -3835,41 +3825,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
 
-    if (block.IsProofOfStake()) {
-        if (!IsInitialBlockDownload()
-            && block.vtx[0]->IsCoinStake()
-            && !CheckStakeUnique(block))
-        {
-
-            state.nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
-
-        }
-
-        // First transaction must be coinbase (genesis only) or coinstake
-        // 2nd txn may be coinbase in early blocks: check further in ContextualCheckBlock
-        if (!(block.vtx[0]->IsCoinBase() || block.vtx[0]->IsCoinStake())) // only genesis can be coinbase, check in ContextualCheckBlock
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
-
-        // 2nd txn may never be coinstake, remaining txns must not be coinbase/stake
-        for (size_t i = 1; i < block.vtx.size(); i++)
-            if ((i > 1 && block.vtx[i]->IsCoinBase()) || block.vtx[i]->IsCoinStake())
-                return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase or coinstake");
-
-        if (!CheckBlockSignature(block))
-            return state.DoS(100, false, REJECT_INVALID, "bad-block-signature", false, "bad block signature");
-    }
-    else if(!block.IsProofOfStake() && nHeight >= Params().GetConsensus().nPosHeightActivate){
-        return state.DoS(100, false, REJECT_INVALID, "bad-pos-switch", false, "bad pow block");
-    }
-    else{
-        // First transaction must be coinbase, the rest must not be
-        if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
         for (unsigned int i = 1; i < block.vtx.size(); i++)
             if (block.vtx[i]->IsCoinBase())
                 return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
-    }
-
+    
     // Check transactions
     if (nHeight == INT_MAX)
         nHeight = ZerocoinGetNHeight(block.GetBlockHeader());
@@ -3984,17 +3945,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
-    if (nHeight >= consensusParams.nPosHeightActivate)
-    {
-        // Check proof-of-stake
-        if (block.nBits != GetNextTargetRequired(pindexPrev))
-            return state.DoS(100, false, REJECT_INVALID, "bad-proof-of-stake", true, strprintf("%s: Bad proof-of-stake target", __func__));
-    } else
-    {
-        // Check proof of work
-        if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
-            return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
-    }
+    
+    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+        return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+    
     // Check against checkpoints
     if (fCheckpointsEnabled) {
         // Don't accept any forks from the main chain prior to last checkpoint.

@@ -445,14 +445,6 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->mintedPubCoins     = diskindex.mintedPubCoins;
                 pindexNew->spentSerials       = diskindex.spentSerials;
 
-                //PoS
-                if(diskindex.IsProofOfStake() || diskindex.nHeight >= Params().GetConsensus().nPosHeightActivate){
-                    pindexNew->nFlags                   = diskindex.nFlags;
-                    pindexNew->bnStakeModifier          = diskindex.bnStakeModifier;
-                    pindexNew->prevoutStake             = diskindex.prevoutStake;
-                    pindexNew->nMoneySupply             = diskindex.nMoneySupply;
-                }
-                //Check POW limits before PoS onchain
                 else
                 {
                     if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams))

@@ -260,47 +260,6 @@ bool CheckDevFundInputs(const CTransaction &tx, CValidationState &state, int nHe
     if(nHeight == INT_MAX)
         return true;
 
-    if(Params().GetConsensus().nPosHeightActivate > nHeight){
-        if(nHeight >= Params().GetConsensus().nMasternodePaymentsStartBlock){
-
-            int total_payment_tx = 0;
-            CAmount masternodePayment = GetMasternodePayment(nHeight, 0);
-
-            BOOST_FOREACH(const CTxOut &output, tx.vout) {
-                if (masternodePayment == output.nValue) {
-                    total_payment_tx = total_payment_tx + 1;
-                }
-            }
-            // no more than 1 output for payment, possible no winner if list is not populated
-            if (total_payment_tx > 1) {
-                return state.DoS(100, false, REJECT_INVALID_MASTERNODE_PAYMENT,
-                                 "CTransaction::CheckTransaction() : invalid masternode payment");
-            }
-        }
-    }
-    //PoS reward distribution
-    else{
-
-        /* Check for Masternode payment in block */
-
-        if(nHeight >= Params().GetConsensus().nMasternodePaymentsStartBlock){
-
-            int total_payment_tx = 0;
-            CAmount masternodePayment = GetMasternodePayment(nHeight, 0);
-
-            BOOST_FOREACH(const CTxOut &output, tx.vout) {
-                if (output.nValue >= masternodePayment) {
-                    total_payment_tx = total_payment_tx + 1;
-                }
-            }
-            // no more than 1 output for payment, possible no winner if list is not populated
-            if (total_payment_tx > 1) {
-                return state.DoS(100, false, REJECT_INVALID_MASTERNODE_PAYMENT,
-                                 "CTransaction::CheckTransaction() : invalid masternode payment");
-            }
-        }
-    }
-
     return true;
 }
 
