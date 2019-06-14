@@ -29,8 +29,8 @@
 #include <utility>
 #include <vector>
 #include "zerocoin/zerocoin.h"
-#include <anonymize-address/extkey.h>
-#include <anonymize-address/stealth.h>
+#include <stealth/extkey.h>
+#include <stealth/stealth.h>
 #include <crypto/sha512.h>
 #include "../base58.h"
 #include <crypto/hmac_sha256.h>

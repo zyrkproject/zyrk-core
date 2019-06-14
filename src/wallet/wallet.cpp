@@ -41,7 +41,7 @@
 #include <masternode/masternodeman.h>
 #include <masternode/masternode-sync.h>
 #include "random.h"
-#include <anonymize-address/commitmentkey.h>
+#include <stealth/commitmentkey.h>
 
 #include <rpc/server.h>
 #include <consensus/merkle.h>

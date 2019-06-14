@@ -34,7 +34,7 @@
 #include <wallet/feebumper.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h> // for BackupWallet
-#include <anonymize-address/commitmentkey.h>
+#include <stealth/commitmentkey.h>
 
 #include <stdint.h>
 

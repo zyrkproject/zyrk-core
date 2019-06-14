@@ -3,9 +3,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <anonymize-address/extkey.h>
+#include <stealth/extkey.h>
 
-#include <anonymize-address/keyutil.h>
+#include <stealth/keyutil.h>
 #include <util.h>
 #include <base58.h>
 #include <crypto/hmac_sha512.h>

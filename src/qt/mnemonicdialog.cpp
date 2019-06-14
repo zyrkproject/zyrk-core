@@ -12,7 +12,7 @@
 
 #include <util.h>
 #include <univalue.h>
-#include <anonymize-address/mnemonic.h>
+#include <stealth/mnemonic.h>
 
 #include <QDebug>
 

@@ -8,12 +8,12 @@
 #include <util.h>
 #include <utilstrencodings.h>
 #include <key.h>
-#include <anonymize-address/extkey.h>
+#include <stealth/extkey.h>
 #include <base58.h>
 #include <random.h>
 #include <chainparams.h>
 #include <support/cleanse.h>
-#include <anonymize-address/mnemonic.h>
+#include <stealth/mnemonic.h>
 
 #include <string>
 #include <univalue.h>

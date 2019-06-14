@@ -29,7 +29,7 @@
 #include <wallet/coincontrol.h>
 #include <script/ismine.h>
 #include <qt/recentrequeststablemodel.h>
-#include <anonymize-address/commitmentkey.h>
+#include <stealth/commitmentkey.h>
 
 #include <QIcon>
 #include <QMenu>

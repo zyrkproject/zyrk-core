@@ -18,7 +18,7 @@
 #include "platformstyle.h"
 #include <wallet/wallet.h>
 #include "qt/recentrequeststablemodel.h"
-#include <anonymize-address/commitmentkey.h>
+#include <stealth/commitmentkey.h>
 #include <qt/coincontroldialog.h>
 
 #include <QIcon>

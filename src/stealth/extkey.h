@@ -8,10 +8,10 @@
 
 
 #include <key.h>
-#include <anonymize-address/stealth.h>
+#include <stealth/stealth.h>
 #include <util.h>
-#include <anonymize-address/keyutil.h>
-#include <anonymize-address/types.h>
+#include <stealth/keyutil.h>
+#include <stealth/types.h>
 #include <sync.h>
 #include <script/ismine.h>
 

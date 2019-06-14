@@ -3,12 +3,12 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-//#include <anonymize-address/smsg/crypter.h>
-#include <anonymize-address/stealth.h>
-//#include <anonymize-address/smsg/smessage.h>
+//#include <stealth/smsg/crypter.h>
+#include <stealth/stealth.h>
+//#include <stealth/smsg/smessage.h>
 #include <base58.h>
 #include <crypto/sha256.h>
-#include <anonymize-address/keyutil.h>
+#include <stealth/keyutil.h>
 #include <key.h>
 #include <pubkey.h>
 #include <random.h>
