@@ -47,7 +47,6 @@
 #ifdef ENABLE_WALLET
 #include <wallet/init.h>
 #endif
-#include <pos/miner.h>
 #include <warnings.h>
 #include <stdint.h>
 #include <stdio.h>

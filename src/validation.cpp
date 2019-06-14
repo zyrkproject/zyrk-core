@@ -42,7 +42,6 @@
 #include <coins.h>
 #include <future>
 #include <sstream>
-#include <pos/kernel.h>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/join.hpp>

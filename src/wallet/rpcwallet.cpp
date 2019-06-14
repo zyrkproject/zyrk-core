@@ -28,7 +28,6 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
-#include <pos/miner.h>
 #include <rpc/blockchain.h>
 #include <warnings.h>
 #include <validation.h>

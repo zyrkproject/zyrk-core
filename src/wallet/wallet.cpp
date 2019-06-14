@@ -44,8 +44,6 @@
 #include <anonymize-address/commitmentkey.h>
 
 #include <rpc/server.h>
-#include <pos/kernel.h>
-#include <pos/miner.h>
 #include <consensus/merkle.h>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>

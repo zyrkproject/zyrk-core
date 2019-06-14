@@ -13,7 +13,6 @@
 #include <util.h>
 #include <ui_interface.h>
 #include <init.h>
-#include <pos/miner.h>
 #include "validation.h"
 
 #include <stdint.h>
