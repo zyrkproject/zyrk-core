@@ -2584,128 +2584,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, block.nTime);
 
-    if (block.IsProofOfStake()) // check payment information on staked blocks
-    {
-        CTransactionRef txCoinstake = block.vtx[0];
+    if (block.vtx[0]->GetValueOut() > blockReward)
+        return state.DoS(100,
+            error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
+                block.vtx[0]->GetValueOut(), blockReward),
+                REJECT_INVALID, "bad-cb-amount");
 
-        int64_t returnFee = 0;
-        bool payFees = false;
-        //Check for Anonymize fee distribution
-        if(!GetMasternodeFeePayment(returnFee, payFees, block))
-            return state.DoS(100, error("ConnectBlock() : GetMasternodeFeePayment incorrect Anonymize fee scheduling."), REJECT_INVALID, "bad-cs-amount");
-
-        if(txCoinstake->vout.size() < 2)
-            return state.DoS(100, error("ConnectBlock() : not enought coinstake outputs(actual=%d vs realistic=2)", txCoinstake->vout.size()), REJECT_INVALID, "bad-cs-amount");
-
-
-        CAmount nCalculatedStakeReward;
-        if(pindex->nHeight > 1500000){
-            nCalculatedStakeReward = Params().GetProofOfStakeReward(pindex->pprev, nFees) +
-                    ((DEVELOPMENT_REWARD_POST_POS + ((chainActive.Height() + 1 >= Params().GetConsensus().nMasternodePaymentsStartBlock) ? MASTERNODE_REWARD_POST_POS : 0)) * GetBlockSubsidy(pindex->nHeight, block.nTime));
-        }
-        else{
-            nCalculatedStakeReward = Params().GetProofOfStakeReward(pindex->pprev, nFees, true) +
-                    ((DEVELOPMENT_REWARD_POST_POS + ((chainActive.Height() + 1 >= Params().GetConsensus().nMasternodePaymentsStartBlock) ? MASTERNODE_REWARD_POST_POS : 0)) * GetBlockSubsidy(pindex->nHeight, block.nTime));
-        }
-
-        if (pindex->pprev->IsProofOfStake()) // check for cache
-        {
-            CTransactionRef txPrevCoinstake;
-            if (!coinStakeCache.GetCoinStake(pindex->pprev->GetBlockHash(), txPrevCoinstake))
-                return state.DoS(100, error("%s: Failed to get previous coinstake.", __func__), REJECT_INVALID, "bad-cs-amount");
-
-            assert(txPrevCoinstake->IsCoinStake()); // Sanity check
-        }
-
-        bool found_dev = false;
-
-        CScript DEV_SCRIPT;
-
-        bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET);
-
-        if (!fTestNet) {
-            DEV_SCRIPT = GetScriptForDestination(DecodeDestination("SUQjctgtHwW5ni5VAeH9jUh6N5nNtj4eQs"));
-        }
-        else {
-            DEV_SCRIPT = GetScriptForDestination(DecodeDestination("2PosyBduiL7yMfBK8DZEtCBJaQF76zgE8f"));
-        }
-
-        int nHeight = pindex->nHeight;
-
-        BOOST_FOREACH(const CTxOut &output, txCoinstake->vout) {
-            if (output.scriptPubKey == DEV_SCRIPT && output.nValue == (int64_t)(DEVELOPMENT_REWARD_POST_POS * GetBlockSubsidy(nHeight, block.nTime))) {
-                found_dev = true;
-            }
-        }
-
-        if(chainActive.Height() + 1 < Params().GetConsensus().nStartAnonymizeFeeDistribution){
-            if (!(found_dev)) {
-                return state.DoS(100, false, REJECT_FOUNDER_REWARD_MISSING,
-                                 "CTransaction::CheckTransaction() : dev reward missing");
-            }
-        }
-
-        else{
-
-        if (!(found_dev)) {
-            nCalculatedStakeReward = Params().GetProofOfStakeReward(pindex->pprev, nFees) +
-                ((MASTERNODE_REWARD_POST_POS) * GetBlockSubsidy(pindex->nHeight, block.nTime));
-            }
-        }
-    
-        blockReward = nCalculatedStakeReward;
-
-        //Make sure current fees in this block are not paid out
-        if(!payFees){
-            blockReward = blockReward - returnFee;
-        }
-        //Payout fees for masternode fee cycle
-        else{
-            /*
-            if(!CheckAnonymizeProtocolFeePayouts(block, returnFee))
-                return state.DoS(100, error("CheckAnonymizeProtocolFeePayouts() : block does not payout correct masternode fees"), REJECT_INVALID, "bad-cs-amount");
-            */
-            blockReward = blockReward + returnFee;
-        }
-
-        if (nStakeReward < 0 || nStakeReward > blockReward)
-            return state.DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, blockReward), REJECT_INVALID, "bad-cs-amount");
-
-
-        found_dev = false;
-        CAmount masternodeReward = (int64_t)(MASTERNODE_REWARD_POST_POS * GetBlockSubsidy(nHeight, block.nTime));
-        //check masternode payout,
-        if(chainActive.Height() + 1 < Params().GetConsensus().nMasternodePaymentsStartBlock || (mnodeman.GetFullMasternodeVector().size() < 10)){
-            found_dev = true;
-        }
-        else{
-            BOOST_FOREACH(const CTxOut &output, txCoinstake->vout) {
-                //check that masternode reward at least the blockreward, accounts for Anonymize fees
-                if (output.nValue >= masternodeReward) {
-                    found_dev = true;
-                }
-            }
-        }
-
-        if(!found_dev){
-            return state.DoS(100, false, REJECT_FOUNDER_REWARD_MISSING,
-                             "CTransaction::CheckTransaction() : masternode reward missing");
-        }
-
-        coinStakeCache.InsertCoinStake(blockHash, txCoinstake);
-    }
-    else
-    {
-        if (block.vtx[0]->GetValueOut() > blockReward)
-            return state.DoS(100,
-                             error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                                   block.vtx[0]->GetValueOut(), blockReward),
-                                   REJECT_INVALID, "bad-cb-amount");
-    }
-
-
-
-    // Masternode
     std::string strError = "";
     if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
         return state.DoS(0, error("ConnectBlock(): %s", strError), REJECT_INVALID, "bad-cb-amount");
@@ -2716,8 +2600,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         return state.DoS(0, error("ConnectBlock(): couldn't find masternode payments"),
                          REJECT_INVALID, "bad-cb-payee");
     }
-    // END Masternode
-
 
     if (!control.Wait())
         return state.DoS(100, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
