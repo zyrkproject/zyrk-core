@@ -1488,7 +1488,6 @@ public:
 
     int64_t nLastCoinStakeSearchTime = 0;
     int64_t nReserveBalance = 0;
-    size_t nStakeThread = 9999999; // unset
 
     mutable int deepestTxnDepth = 0; // for stake mining
 
