@@ -99,8 +99,6 @@ public:
         consensus.nMasternodeMinimumConfirmations = 1;
         consensus.nMasternodePaymentsStartBlock = 1500; 
         consensus.nMasternodeInitialize = 1499;
-        consensus.nPosTimeActivation = 9999999999;
-        consensus.nPosHeightActivate = 1525600;
         nModifierInterval = 10 * 60;    
         nTargetSpacing = 2* 60;
         nTargetTimespan = 24 * 60;
@@ -230,8 +228,6 @@ public:
         consensus.nMasternodeMinimumConfirmations = 5;
         consensus.nMasternodePaymentsStartBlock = 5000;
         consensus.nMasternodeInitialize = 1080;
-        consensus.nPosTimeActivation = 9999999999; 
-        consensus.nPosHeightActivate = 500000;
         consensus.nCoinMaturityReductionHeight = 999999;
         consensus.nStartAnonymizeFeeDistribution = 150000;
         consensus.nAnonymizeFeeDistributionCycle = 720;
@@ -359,8 +355,6 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
         consensus.nMasternodePaymentsStartBlock = 720;
         consensus.nMasternodeInitialize = 600;
-        consensus.nPosTimeActivation = 9999999999; 
-        consensus.nPosHeightActivate = 500;
         nModifierInterval = 10 * 60;    
         nTargetSpacing = 2 * 60;           
         nTargetTimespan = 24 * 60;  

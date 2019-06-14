@@ -31,16 +31,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex *pindexLast)
     unsigned int nProofOfWorkLimit;
     int nHeight = pindexLast ? pindexLast->nHeight+1 : 0;
 
-    if (GetAdjustedTime() < Params().GetConsensus().nPosTimeActivation && nHeight < Params().GetConsensus().nPosHeightActivate)
-    {
-        return DarkGravityWave(pindexLast, consensus);
-
-    } else
-    {
-        bnProofOfWorkLimit = UintToArith256(consensus.powLimit);
-        nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
-    }
-
+    return DarkGravityWave(pindexLast, consensus);
 
     if (pindexLast == nullptr)
         return nProofOfWorkLimit; // Genesis block

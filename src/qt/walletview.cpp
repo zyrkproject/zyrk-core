@@ -293,7 +293,7 @@ void WalletView::unlockWallet(bool iconClicked)
     {
         AskPassphraseDialog dlg(
             iconClicked ? AskPassphraseDialog::UnlockManual : AskPassphraseDialog::Unlock, this,
-            (GetAdjustedTime() >= Params().GetConsensus().nPosTimeActivation || chainActive.Height() + 1 >= Params().GetConsensus().nPosHeightActivate)
+            (chainActive.Height() + 1 >= 999999)
             ? overviewPage->isStaking: nullptr);
         dlg.setModel(walletModel);
         dlg.exec();
