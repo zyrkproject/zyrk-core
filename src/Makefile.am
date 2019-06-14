@@ -185,23 +185,23 @@ ZYRK_CORE_H = \
   script/sign.h \
   script/standard.h \
   script/ismine.h \
-  anonymize-address/commitmentkey.h \
-  anonymize-address/lz4.h \
-  anonymize-address/extkey.h \
-  anonymize-address/keystore.h \
-  anonymize-address/keyutil.h \
-  anonymize-address/mnemonic.h \
-  anonymize-address/stealth.h \
-  anonymize-address/types.h \
-  anonymize-address/xxhash.h \
-  anonymize-address/wordlists/chinese_simplified.h \
-  anonymize-address/wordlists/chinese_traditional.h \
-  anonymize-address/wordlists/english.h \
-  anonymize-address/wordlists/french.h \
-  anonymize-address/wordlists/japanese.h \
-  anonymize-address/wordlists/spanish.h \
-  anonymize-address/wordlists/italian.h \
-  anonymize-address/wordlists/korean.h \
+  stealth/commitmentkey.h \
+  stealth/lz4.h \
+  stealth/extkey.h \
+  stealth/keystore.h \
+  stealth/keyutil.h \
+  stealth/mnemonic.h \
+  stealth/stealth.h \
+  stealth/types.h \
+  stealth/xxhash.h \
+  stealth/wordlists/chinese_simplified.h \
+  stealth/wordlists/chinese_traditional.h \
+  stealth/wordlists/english.h \
+  stealth/wordlists/french.h \
+  stealth/wordlists/japanese.h \
+  stealth/wordlists/spanish.h \
+  stealth/wordlists/italian.h \
+  stealth/wordlists/korean.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -342,7 +342,7 @@ libzyrk_wallet_a_SOURCES = \
   masternode/masternodeman.cpp \
   masternode/masternodeconfig.cpp \
   masternode/instantx.cpp \
-  anonymize-address/commitmentkey.cpp \
+  stealth/commitmentkey.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/feebumper.cpp \
@@ -480,13 +480,13 @@ libzyrk_common_a_SOURCES = \
   script/standard.cpp \
   unilib/uninorms.cpp \
   unilib/utf8.cpp \
-  anonymize-address/lz4.c \
-  anonymize-address/extkey.cpp \
-  anonymize-address/keystore.cpp \
-  anonymize-address/keyutil.cpp \
-  anonymize-address/mnemonic.cpp \
-  anonymize-address/stealth.cpp \
-  anonymize-address/xxhash.c \
+  stealth/lz4.c \
+  stealth/extkey.cpp \
+  stealth/keystore.cpp \
+  stealth/keyutil.cpp \
+  stealth/mnemonic.cpp \
+  stealth/stealth.cpp \
+  stealth/xxhash.c \
   warnings.cpp \
   $(ZYRK_CORE_H)
 

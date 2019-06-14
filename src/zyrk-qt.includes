@@ -67,11 +67,11 @@ zerocoin
 zmq
 leveldb/doc/bench
 leveldb/issues
-anonymize-address/wordlists
+stealth/wordlists
 tor/src/ext/curve25519_donna
-anonymize-address
+stealth
 univalue/gen
-anonymize-address/smsg
+stealth/smsg
 univalue/test
 libexecstream/test
 tor/src/ext/timeouts/lua

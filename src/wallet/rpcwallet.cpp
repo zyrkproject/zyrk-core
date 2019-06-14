@@ -33,7 +33,7 @@
 #include <validation.h>
 #include "zerocoin/zerocoin.h"
 #include "../libzerocoin/Zerocoin.h"
-#include "anonymize-address/commitmentkey.h"
+#include "stealth/commitmentkey.h"
 #include <vector>
 
 #include <init.h>  // For StartShutdown

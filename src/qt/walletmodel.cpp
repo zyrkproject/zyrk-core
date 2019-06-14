@@ -42,7 +42,7 @@
 #include <QMessageBox>
 #include <QSet>
 #include <QTimer>
-#include "../anonymize-address/stealth.h"
+#include "../stealth/stealth.h"
 
 
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
