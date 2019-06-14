@@ -62,7 +62,6 @@ public:
 
     using DynamicRewardSystem = std::map<int64_t, CAmount>;
 
-    //pos
     uint32_t GetModifierInterval() const { return nModifierInterval; }
     uint32_t GetTargetSpacing() const { return nTargetSpacing; }
     uint32_t GetTargetTimespan() const { return nTargetTimespan; }
@@ -143,8 +142,6 @@ public:
     uint32_t nModifierInterval;         // seconds to elapse before new modifier is computed
     uint32_t nTargetSpacing;            // targeted number of seconds between blocks
     uint32_t nTargetTimespan;
-    uint32_t nStakeTimestampMask = (1 << 4) -1; // 4 bits, every kernel stake hash will change every 16 seconds
-    int64_t nCoinYearReward = 1.5 * CENT; // 1.5% per year based on a 30% staking model
 };
 
 /**

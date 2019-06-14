@@ -506,10 +506,6 @@ policy/policy.cpp
 policy/policy.h
 policy/rbf.cpp
 policy/rbf.h
-pos/kernel.cpp
-pos/kernel.h
-pos/miner.cpp
-pos/miner.h
 pow.cpp
 pow.h
 prevector.h

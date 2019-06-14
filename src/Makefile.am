@@ -277,7 +277,6 @@ libzyrk_server_a_SOURCES = \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
-  pos/kernel.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
