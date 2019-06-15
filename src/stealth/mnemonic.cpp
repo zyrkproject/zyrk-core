@@ -3,7 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <anonymize-address/mnemonic.h>
+#include <stealth/mnemonic.h>
 
 #include <util.h>
 #include <crypto/hmac_sha512.h>
@@ -13,14 +13,14 @@
 #include <unilib/uninorms.h>
 #include <unilib/utf8.h>
 
-#include <anonymize-address/wordlists/english.h>
-#include <anonymize-address/wordlists/french.h>
-#include <anonymize-address/wordlists/japanese.h>
-#include <anonymize-address/wordlists/spanish.h>
-#include <anonymize-address/wordlists/chinese_simplified.h>
-#include <anonymize-address/wordlists/chinese_traditional.h>
-#include <anonymize-address/wordlists/italian.h>
-#include <anonymize-address/wordlists/korean.h>
+#include <stealth/wordlists/english.h>
+#include <stealth/wordlists/french.h>
+#include <stealth/wordlists/japanese.h>
+#include <stealth/wordlists/spanish.h>
+#include <stealth/wordlists/chinese_simplified.h>
+#include <stealth/wordlists/chinese_traditional.h>
+#include <stealth/wordlists/italian.h>
+#include <stealth/wordlists/korean.h>
 
 
 static const unsigned char *mnLanguages[] =

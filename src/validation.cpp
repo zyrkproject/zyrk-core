@@ -42,7 +42,6 @@
 #include <coins.h>
 #include <future>
 #include <sstream>
-#include <pos/kernel.h>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -81,10 +80,7 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue) {
 
     const Consensus::Params &consensusParams = Params().GetConsensus();
     CAmount ret = blockValue / 100 * 35;
-
-    if(nHeight >= consensusParams.nPosHeightActivate)
-        ret = blockValue / 100 * 35;
-        
+       
     return ret;
 }
 
@@ -2313,18 +2309,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck, pindex->nHeight, false))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
 
-
-    //check for PoS
-    if (block.IsProofOfStake())
-    {
-        pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
-        setDirtyBlockIndex.insert(pindex);
-
-        uint256 hashProof, targetProofOfStake;
-        if (!CheckProofOfStake(pindex->pprev, *block.vtx[0], block.nTime, block.nBits, hashProof, targetProofOfStake))
-            return state.DoS(100, error("%s: Check proof of stake failed.", __func__), REJECT_INVALID, "bad-proof-of-stake");
-    }
-
     uint256 blockHash = block.GetHash();
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
@@ -2584,128 +2568,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, block.nTime);
 
-    if (block.IsProofOfStake()) // check payment information on staked blocks
-    {
-        CTransactionRef txCoinstake = block.vtx[0];
+    if (block.vtx[0]->GetValueOut() > blockReward)
+        return state.DoS(100,
+            error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
+                block.vtx[0]->GetValueOut(), blockReward),
+                REJECT_INVALID, "bad-cb-amount");
 
-        int64_t returnFee = 0;
-        bool payFees = false;
-        //Check for Anonymize fee distribution
-        if(!GetMasternodeFeePayment(returnFee, payFees, block))
-            return state.DoS(100, error("ConnectBlock() : GetMasternodeFeePayment incorrect Anonymize fee scheduling."), REJECT_INVALID, "bad-cs-amount");
-
-        if(txCoinstake->vout.size() < 2)
-            return state.DoS(100, error("ConnectBlock() : not enought coinstake outputs(actual=%d vs realistic=2)", txCoinstake->vout.size()), REJECT_INVALID, "bad-cs-amount");
-
-
-        CAmount nCalculatedStakeReward;
-        if(pindex->nHeight > 1500000){
-            nCalculatedStakeReward = Params().GetProofOfStakeReward(pindex->pprev, nFees) +
-                    ((DEVELOPMENT_REWARD_POST_POS + ((chainActive.Height() + 1 >= Params().GetConsensus().nMasternodePaymentsStartBlock) ? MASTERNODE_REWARD_POST_POS : 0)) * GetBlockSubsidy(pindex->nHeight, block.nTime));
-        }
-        else{
-            nCalculatedStakeReward = Params().GetProofOfStakeReward(pindex->pprev, nFees, true) +
-                    ((DEVELOPMENT_REWARD_POST_POS + ((chainActive.Height() + 1 >= Params().GetConsensus().nMasternodePaymentsStartBlock) ? MASTERNODE_REWARD_POST_POS : 0)) * GetBlockSubsidy(pindex->nHeight, block.nTime));
-        }
-
-        if (pindex->pprev->IsProofOfStake()) // check for cache
-        {
-            CTransactionRef txPrevCoinstake;
-            if (!coinStakeCache.GetCoinStake(pindex->pprev->GetBlockHash(), txPrevCoinstake))
-                return state.DoS(100, error("%s: Failed to get previous coinstake.", __func__), REJECT_INVALID, "bad-cs-amount");
-
-            assert(txPrevCoinstake->IsCoinStake()); // Sanity check
-        }
-
-        bool found_dev = false;
-
-        CScript DEV_SCRIPT;
-
-        bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET);
-
-        if (!fTestNet) {
-            DEV_SCRIPT = GetScriptForDestination(DecodeDestination("SUQjctgtHwW5ni5VAeH9jUh6N5nNtj4eQs"));
-        }
-        else {
-            DEV_SCRIPT = GetScriptForDestination(DecodeDestination("2PosyBduiL7yMfBK8DZEtCBJaQF76zgE8f"));
-        }
-
-        int nHeight = pindex->nHeight;
-
-        BOOST_FOREACH(const CTxOut &output, txCoinstake->vout) {
-            if (output.scriptPubKey == DEV_SCRIPT && output.nValue == (int64_t)(DEVELOPMENT_REWARD_POST_POS * GetBlockSubsidy(nHeight, block.nTime))) {
-                found_dev = true;
-            }
-        }
-
-        if(chainActive.Height() + 1 < Params().GetConsensus().nStartAnonymizeFeeDistribution){
-            if (!(found_dev)) {
-                return state.DoS(100, false, REJECT_FOUNDER_REWARD_MISSING,
-                                 "CTransaction::CheckTransaction() : dev reward missing");
-            }
-        }
-
-        else{
-
-        if (!(found_dev)) {
-            nCalculatedStakeReward = Params().GetProofOfStakeReward(pindex->pprev, nFees) +
-                ((MASTERNODE_REWARD_POST_POS) * GetBlockSubsidy(pindex->nHeight, block.nTime));
-            }
-        }
-    
-        blockReward = nCalculatedStakeReward;
-
-        //Make sure current fees in this block are not paid out
-        if(!payFees){
-            blockReward = blockReward - returnFee;
-        }
-        //Payout fees for masternode fee cycle
-        else{
-            /*
-            if(!CheckAnonymizeProtocolFeePayouts(block, returnFee))
-                return state.DoS(100, error("CheckAnonymizeProtocolFeePayouts() : block does not payout correct masternode fees"), REJECT_INVALID, "bad-cs-amount");
-            */
-            blockReward = blockReward + returnFee;
-        }
-
-        if (nStakeReward < 0 || nStakeReward > blockReward)
-            return state.DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, blockReward), REJECT_INVALID, "bad-cs-amount");
-
-
-        found_dev = false;
-        CAmount masternodeReward = (int64_t)(MASTERNODE_REWARD_POST_POS * GetBlockSubsidy(nHeight, block.nTime));
-        //check masternode payout,
-        if(chainActive.Height() + 1 < Params().GetConsensus().nMasternodePaymentsStartBlock || (mnodeman.GetFullMasternodeVector().size() < 10)){
-            found_dev = true;
-        }
-        else{
-            BOOST_FOREACH(const CTxOut &output, txCoinstake->vout) {
-                //check that masternode reward at least the blockreward, accounts for Anonymize fees
-                if (output.nValue >= masternodeReward) {
-                    found_dev = true;
-                }
-            }
-        }
-
-        if(!found_dev){
-            return state.DoS(100, false, REJECT_FOUNDER_REWARD_MISSING,
-                             "CTransaction::CheckTransaction() : masternode reward missing");
-        }
-
-        coinStakeCache.InsertCoinStake(blockHash, txCoinstake);
-    }
-    else
-    {
-        if (block.vtx[0]->GetValueOut() > blockReward)
-            return state.DoS(100,
-                             error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                                   block.vtx[0]->GetValueOut(), blockReward),
-                                   REJECT_INVALID, "bad-cb-amount");
-    }
-
-
-
-    // Masternode
     std::string strError = "";
     if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
         return state.DoS(0, error("ConnectBlock(): %s", strError), REJECT_INVALID, "bad-cb-amount");
@@ -2716,8 +2584,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         return state.DoS(0, error("ConnectBlock(): couldn't find masternode payments"),
                          REJECT_INVALID, "bad-cb-payee");
     }
-    // END Masternode
-
 
     if (!control.Wait())
         return state.DoS(100, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
@@ -3210,23 +3076,8 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     {
         CCoinsViewCache view(pcoinsTip.get());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
-        if (pindexNew->nFlags & BLOCK_FAILED_DUPLICATE_STAKE)
-            state.nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
-        GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid()){
-                if (state.GetRejectReason() == "bad-cs-duplicate")
-                {
-                    pindexNew->SetProofOfStake();
-                    pindexNew->prevoutStake = blockConnecting.vtx[0]->vin[0].prevout;
-                    if (pindexNew->pprev && pindexNew->pprev->bnStakeModifier.IsNull())
-                        LogPrintf("Warning: %s - Previous stake modifier is null.\n", __func__);
-                    else
-                        pindexNew->bnStakeModifier = ComputeStakeModifierV2(pindexNew->pprev, pindexNew->prevoutStake.hash);
-
-                    pindexNew->nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
-                    setDirtyBlockIndex.insert(pindexNew);
-                }
                 InvalidBlockFound(pindexNew, state, blockConnecting);
             }
 
@@ -3847,15 +3698,8 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
     }
 
     // Check proof of work matches claimed amount
-    if(nHeight < consensusParams.nPosHeightActivate){
-        if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-            return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
-    }
-    else{
-        // Check timestamp
-        if (!block.hashPrevBlock.IsNull() && block.GetBlockTime() > (GetAdjustedTime() + 15))
-            return state.DoS(50, false, REJECT_INVALID, "block-timestamp", false, "block timestamp too far in the future");
-    }
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;
 }
@@ -3981,41 +3825,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
 
-    if (block.IsProofOfStake()) {
-        if (!IsInitialBlockDownload()
-            && block.vtx[0]->IsCoinStake()
-            && !CheckStakeUnique(block))
-        {
-
-            state.nFlags |= BLOCK_FAILED_DUPLICATE_STAKE;
-
-        }
-
-        // First transaction must be coinbase (genesis only) or coinstake
-        // 2nd txn may be coinbase in early blocks: check further in ContextualCheckBlock
-        if (!(block.vtx[0]->IsCoinBase() || block.vtx[0]->IsCoinStake())) // only genesis can be coinbase, check in ContextualCheckBlock
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
-
-        // 2nd txn may never be coinstake, remaining txns must not be coinbase/stake
-        for (size_t i = 1; i < block.vtx.size(); i++)
-            if ((i > 1 && block.vtx[i]->IsCoinBase()) || block.vtx[i]->IsCoinStake())
-                return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase or coinstake");
-
-        if (!CheckBlockSignature(block))
-            return state.DoS(100, false, REJECT_INVALID, "bad-block-signature", false, "bad block signature");
-    }
-    else if(!block.IsProofOfStake() && nHeight >= Params().GetConsensus().nPosHeightActivate){
-        return state.DoS(100, false, REJECT_INVALID, "bad-pos-switch", false, "bad pow block");
-    }
-    else{
-        // First transaction must be coinbase, the rest must not be
-        if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
         for (unsigned int i = 1; i < block.vtx.size(); i++)
             if (block.vtx[i]->IsCoinBase())
                 return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
-    }
-
+    
     // Check transactions
     if (nHeight == INT_MAX)
         nHeight = ZerocoinGetNHeight(block.GetBlockHeader());
@@ -4130,17 +3945,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
 
     // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
-    if (nHeight >= consensusParams.nPosHeightActivate)
-    {
-        // Check proof-of-stake
-        if (block.nBits != GetNextTargetRequired(pindexPrev))
-            return state.DoS(100, false, REJECT_INVALID, "bad-proof-of-stake", true, strprintf("%s: Bad proof-of-stake target", __func__));
-    } else
-    {
-        // Check proof of work
-        if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
-            return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
-    }
+    
+    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+        return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
+    
     // Check against checkpoints
     if (fCheckpointsEnabled) {
         // Don't accept any forks from the main chain prior to last checkpoint.
@@ -4197,83 +4005,43 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
         }
     }
 
-    if (block.IsProofOfStake())
-    {
-        if (!CheckCoinStakeTimestamp(nHeight, block.GetBlockTime()))
-            return state.DoS(50, false, REJECT_INVALID, "bad-coinstake-time", true, strprintf("%s: coinstake timestamp violation nTimeBlock=%d", __func__, block.GetBlockTime()));
-
-        // Check timestamp against prev
-        if (block.GetBlockTime() <= pindexPrev->GetBlockTime())
-            return state.DoS(50, false, REJECT_INVALID, "bad-block-time", true, strprintf("%s: block's timestamp is too early", __func__));
-
-        // check witness merkleroot, TODO: should witnessmerkleroot be hashed?
-        bool malleated = false;
-        uint256 hashWitness = BlockMerkleRoot(block, &malleated);
-
-        if (hashWitness != block.hashMerkleRoot)
-            return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
-
-        if (!CheckCoinStakeTimestamp(nHeight, block.GetBlockTime()))
-            return state.DoS(50, false, REJECT_INVALID, "bad-coinstake-time", true, strprintf("%s: coinstake timestamp violation nTimeBlock=%d", __func__, block.GetBlockTime()));
-
-        // Check timestamp against prev
-        if (block.GetBlockTime() <= pindexPrev->GetBlockTime() || (block.GetBlockTime() + 15) < pindexPrev->GetBlockTime())
-            return state.DoS(50, false, REJECT_INVALID, "bad-block-time", true, strprintf("%s: block's timestamp is too early", __func__));
-
-        uint256 hashProof, targetProofOfStake;
-
-        // Blocks are connected at end of import / reindex
-        // CheckProofOfStake is run again during connectblock
-        if (!IsInitialBlockDownload() && !CheckProofOfStake(pindexPrev, *block.vtx[0], block.nTime, block.nBits, hashProof, targetProofOfStake))
-        {
-            LogPrintf("WARNING: ContextualCheckBlock(): check proof-of-stake failed for block %s\n", block.GetHash().ToString());
-            //return false; // do not error here as we expect this during initial block download
-            if (pindexPrev->bnStakeModifier.IsNull())
-                // Can happen if the block is received out of order - CheckProofOfStake will run again on connectblock.
-                LogPrint(BCLog::POS, "%s: Accepting failed CheckProofOfStake block, missing stake-modifier.\n", __func__);
-            else
-                return state.DoS(50, false, REJECT_INVALID, "bad-proof-of-stake", true, strprintf("%s: CheckProofOfStake failed.", __func__));
-        };
-    } else{
-
-        // Validation for witness commitments.
-        // * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
-        //   coinbase (where 0x0000....0000 is used instead).
-        // * The coinbase scriptWitness is a stack of a single 32-byte vector, containing a witness nonce (unconstrained).
-        // * We build a merkle tree with all those witness hashes as leaves (similar to the hashMerkleRoot in the block header).
-        // * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes of which are
-        //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
-        //   multiple, the last one is used.
-        bool fHaveWitness = false;
-        if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
-            int commitpos = GetWitnessCommitmentIndex(block);
-            if (commitpos != -1) {
-                bool malleated = false;
-                uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
-                // The malleation check is ignored; as the transaction tree itself
-                // already does not permit it, it is impossible to trigger in the
-                // witness tree.
-                if (block.vtx[0]->vin[0].scriptWitness.stack.size() != 1 || block.vtx[0]->vin[0].scriptWitness.stack[0].size() != 32) {
-                    return state.DoS(100, false, REJECT_INVALID, "bad-witness-nonce-size", true, strprintf("%s : invalid witness nonce size", __func__));
-                }
-                CHash256().Write(hashWitness.begin(), 32).Write(&block.vtx[0]->vin[0].scriptWitness.stack[0][0], 32).Finalize(hashWitness.begin());
-                if (memcmp(hashWitness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32)) {
-                    return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
-                }
-                fHaveWitness = true;
+    // Validation for witness commitments.
+    // * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
+    //   coinbase (where 0x0000....0000 is used instead).
+    // * The coinbase scriptWitness is a stack of a single 32-byte vector, containing a witness nonce (unconstrained).
+    // * We build a merkle tree with all those witness hashes as leaves (similar to the hashMerkleRoot in the block header).
+    // * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes of which are
+    //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
+    //   multiple, the last one is used.
+    bool fHaveWitness = false;
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE) {
+        int commitpos = GetWitnessCommitmentIndex(block);
+        if (commitpos != -1) {
+            bool malleated = false;
+            uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
+            // The malleation check is ignored; as the transaction tree itself
+            // already does not permit it, it is impossible to trigger in the
+            // witness tree.
+            if (block.vtx[0]->vin[0].scriptWitness.stack.size() != 1 || block.vtx[0]->vin[0].scriptWitness.stack[0].size() != 32) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-witness-nonce-size", true, strprintf("%s : invalid witness nonce size", __func__));
             }
-        }
-
-        // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
-        if (!fHaveWitness) {
-            for (const auto& tx : block.vtx) {
-                if (tx->HasWitness()) {
-                    return state.DoS(100, false, REJECT_INVALID, "unexpected-witness", true, strprintf("%s : unexpected witness data found", __func__));
-                }
+            CHash256().Write(hashWitness.begin(), 32).Write(&block.vtx[0]->vin[0].scriptWitness.stack[0][0], 32).Finalize(hashWitness.begin());
+            if (memcmp(hashWitness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32)) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-witness-merkle-match", true, strprintf("%s : witness merkle commitment mismatch", __func__));
             }
+            fHaveWitness = true;
         }
     }
 
+    // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
+    if (!fHaveWitness) {
+        for (const auto& tx : block.vtx) {
+            if (tx->HasWitness()) {
+                return state.DoS(100, false, REJECT_INVALID, "unexpected-witness", true, strprintf("%s : unexpected witness data found", __func__));
+            }
+        }
+    }
+    
     // After the coinbase witness nonce and commitment are verified,
     // we can check if the block weight passes (before we've checked the
     // coinbase witness, it would be possible for the weight to be too
@@ -4399,21 +4167,6 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
 
     if (!AcceptBlockHeader(block, state, chainparams, &pindex))
         return false;
-
-    if (block.IsProofOfStake())
-    {
-        pindex->SetProofOfStake();
-        pindex->prevoutStake = pblock->vtx[0]->vin[0].prevout;
-        if (pindex->pprev && pindex->pprev->IsProofOfStake() && pindex->pprev->bnStakeModifier.IsNull()) // block received out of order
-        {
-            if (!IsInitialBlockDownload())
-                LogPrintf("Warning: %s - Previous stake modifier is null.\n", __func__);
-        } else
-        {
-            pindex->bnStakeModifier = ComputeStakeModifierV2(pindex->pprev, pindex->prevoutStake.hash);
-        };
-        setDirtyBlockIndex.insert(pindex);
-    }
 
     // Try to process all requested blocks that we don't have, but only
     // process an unrequested block if it's new and has enough work to

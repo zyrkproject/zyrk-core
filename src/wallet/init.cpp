@@ -303,7 +303,6 @@ bool OpenWallets()
         }
         vpwallets.push_back(pwallet);
         std::string sError;
-        pwallet->ProcessStakingSettings(sError);
     }
 
     return true;

@@ -29,8 +29,8 @@
 #include <utility>
 #include <vector>
 #include "zerocoin/zerocoin.h"
-#include <anonymize-address/extkey.h>
-#include <anonymize-address/stealth.h>
+#include <stealth/extkey.h>
+#include <stealth/stealth.h>
 #include <crypto/sha512.h>
 #include "../base58.h"
 #include <crypto/hmac_sha256.h>
@@ -1465,10 +1465,6 @@ public:
     std::string AnonymizeModeSpendTrigger(string denomination, string toKey = "", vector<CScript> pubCoinScripts = vector<CScript>());
     bool SpendAllZerocoins();
 
-    /* POS functionality */
-
-    bool ProcessStakingSettings(std::string &sError);
-
     bool InMempool(const uint256 &hash) const;
 
     CAmount GetStaked();
@@ -1478,7 +1474,6 @@ public:
     bool SetReserveBalance(CAmount nNewReserveBalance);
     void AvailableCoinsForStaking(std::vector<COutput> &vCoins, int64_t nTime, int nHeight) const;
     bool SelectCoinsForStaking(int64_t nTargetValue, int64_t nTime, int nHeight, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
-    bool CreateCoinStake(unsigned int nBits, int64_t nTime, int nBlockHeight, int64_t nFees, CMutableTransaction &txNew, CKey &key, CBlockTemplate* pblocktemplate, int64_t nAnonymizeFees, std::vector<unsigned char> &commitment, uint256 witnessroot);
     bool SignBlock(CBlockTemplate *pblocktemplate, int nHeight, int64_t nSearchTime);
 
     /* Return a script for a simple address type (normal/extended) */
@@ -1488,7 +1483,6 @@ public:
 
     int64_t nLastCoinStakeSearchTime = 0;
     int64_t nReserveBalance = 0;
-    size_t nStakeThread = 9999999; // unset
 
     mutable int deepestTxnDepth = 0; // for stake mining
 

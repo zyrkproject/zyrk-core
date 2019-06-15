@@ -55,7 +55,7 @@ bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockRewar
 
     if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
     } else {
-//        // should NOT allow superblocks at all, when superblocks are disabled
+        // should NOT allow superblocks at all, when superblocks are disabled
         //LogPrint("gobject", "IsBlockValueValid -- Superblocks are disabled, no superblocks allowed\n");
         if (!isBlockRewardValueMet) {
             strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, superblocks are disabled",

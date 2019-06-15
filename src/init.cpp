@@ -47,7 +47,6 @@
 #ifdef ENABLE_WALLET
 #include <wallet/init.h>
 #endif
-#include <pos/miner.h>
 #include <warnings.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -330,9 +329,6 @@ void Shutdown()
     StopRPC();
     StopHTTPServer();
 #ifdef ENABLE_WALLET
-    if(!fMasterNode){
-        ShutdownThreadStakeMiner();
-    }
     FlushWallets();
 #endif
     MapPort(false);
@@ -2023,36 +2019,6 @@ bool AppInitMain()
 
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
 
-
-    // ********************************************************* Step 11e: start staking
-
-    //do not allow masternodes to run staking threads to avoid bandwidth issues
-    if(!fMasterNode){
-        #ifdef ENABLE_WALLET
-        nMinStakeInterval = gArgs.GetArg("-minstakeinterval", 0);
-        nMinerSleep = gArgs.GetArg("-minersleep", 500);
-        if (!gArgs.GetBoolArg("-staking", true))
-            LogPrintf("ZYRK Staking disabled\n");
-        else
-        {
-            size_t nWallets = vpwallets.size();
-            assert(nWallets > 0);
-            size_t nThreads = std::min(nWallets, (size_t)gArgs.GetArg("-stakingthreads", 1));
-
-            size_t nPerThread = nWallets / nThreads;
-            for (size_t i = 0; i < nThreads; ++i)
-            {
-                size_t nStart = nPerThread * i;
-                size_t nEnd = (i == nThreads-1) ? nWallets : nPerThread * (i+1);
-                StakeThread *t = new StakeThread();
-                vStakeThreads.push_back(t);
-                vpwallets[i]->nStakeThread = i;
-                t->sName = strprintf("miner%d", i);
-                t->thread = std::thread(&TraceThread<std::function<void()> >, t->sName.c_str(), std::function<void()>(std::bind(&ThreadStakeMiner, i, vpwallets, nStart, nEnd)));
-            };
-        }
-        #endif
-    }
     // ********************************************************* Step 12: finished
 
     SetRPCWarmupFinished();

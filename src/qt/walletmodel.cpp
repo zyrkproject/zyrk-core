@@ -34,7 +34,7 @@
 #include <wallet/feebumper.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h> // for BackupWallet
-#include <anonymize-address/commitmentkey.h>
+#include <stealth/commitmentkey.h>
 
 #include <stdint.h>
 
@@ -42,7 +42,7 @@
 #include <QMessageBox>
 #include <QSet>
 #include <QTimer>
-#include "../anonymize-address/stealth.h"
+#include "../stealth/stealth.h"
 
 
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :

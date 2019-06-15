@@ -15,7 +15,7 @@
 #include <serialize.h>
 #include <key.h>
 #include <uint256.h>
-#include <anonymize-address/types.h>
+#include <stealth/types.h>
 
 #include "lz4.h"
 

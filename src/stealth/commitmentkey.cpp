@@ -1,12 +1,13 @@
 // Copyright (c) 2017-2018 The ZYRK developers
+// Copyright (c) 2017-2019 The NIX developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <anonymize-address/commitmentkey.h>
+#include <stealth/commitmentkey.h>
 #include <script/script.h>
 #include <base58.h>
-#include <anonymize-address/lz4.h>
-#include <anonymize-address/keyutil.h>
+#include <stealth/lz4.h>
+#include <stealth/keyutil.h>
 #include <crypto/sha256.h>
 
 
